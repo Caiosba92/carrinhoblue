@@ -274,6 +274,30 @@ function refreshTab(t) {
   if (t === 'analise')   renderAnalise();
 }
 
+// ── Helper: mercado mais barato por item ──────────────────────────
+function mercadoMaisBarato(nome, marca) {
+  const registros = [];
+  STATE.historico.forEach(e => e.itens.forEach(it => {
+    if (it.nome !== nome) return;
+    if (marca && it.marca && it.marca !== marca) return;
+    if (!it.preco || !it.mercado) return;
+    const qtd = parseFloat(it.quantidade) || 1;
+    registros.push({ mercado: it.mercado, pu: parseFloat(it.preco) / qtd });
+  }));
+  if (!registros.length) return null;
+  const porMercado = {};
+  registros.forEach(r => {
+    if (!porMercado[r.mercado]) porMercado[r.mercado] = [];
+    porMercado[r.mercado].push(r.pu);
+  });
+  let melhor = null, melhorMed = Infinity;
+  Object.entries(porMercado).forEach(([m, pus]) => {
+    const med = pus.reduce((a,b) => a+b, 0) / pus.length;
+    if (med < melhorMed) { melhorMed = med; melhor = m; }
+  });
+  return melhor;
+}
+
 // ── Aba Lista ──────────────────────────────────────────────────────
 function renderLista() {
   const lista  = STATE.lista;
@@ -286,13 +310,15 @@ function renderLista() {
   let hp = '';
   if (!pendentes.length && !comprados.length)
     hp = '<div class="empty">Lista vazia.<br>Use o botão + ou a aba Montar.</div>';
+  const mostrarSugestao = lista.length >= 5;
   pendentes.forEach(item => {
     const ri = STATE.lista.indexOf(item);
+    const sugestao = mostrarSugestao ? mercadoMaisBarato(item.nome, item.marca) : null;
     hp += `<div class="item-row">
       <div class="check-circle" onclick="toggleItem(${ri})"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
-        <div style="font-size:12px;color:#888">${item.marca||''}</div>
+        <div style="font-size:12px;color:#888">${item.marca||''}${sugestao?` <span style="color:#27a065;font-weight:600">· 🏷 ${sugestao}</span>`:''}</div>
       </div>
       <span class="cat-badge tag-${catKey(item.categoria)}">${item.categoria}</span>
       <button class="btn btn-sm" onclick="openEditModal(${ri})" style="margin-left:4px;padding:4px 9px;font-size:11px">✎</button>
@@ -472,7 +498,7 @@ function renderSuggestions() {
     h += `<div class="suggest-item" onclick="${ja?'':(`addFromSuggest('${it.nome.replace(/'/g,"\\'")}','${it.categoria}','${it.quantidade||1}','${it.unidade||''}')`)}" style="${ja?'opacity:.4;cursor:default':''}">
       <span class="cat-badge tag-${catKey(it.categoria)}">${it.categoria}</span>
       <span style="flex:1;font-size:14px;font-weight:500">${it.nome}</span>
-      <span style="font-size:12px;color:#aaa">${it.count}x${it.lastPreco?' · R$ '+Number(it.lastPreco).toFixed(2):''}${ja?' ✓':''}</span>
+      <span style="font-size:12px;color:#aaa">${it.count}x${ja?' ✓':''}</span>
     </div>`;
   });
   document.getElementById('suggestions-list').innerHTML = h;
@@ -560,9 +586,7 @@ function renderAnalise() {
   const mercSet = new Set(todos.map(i => i.mercado).filter(Boolean));
   const itemSet = new Set(todos.map(i => i.nome));
   document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-card"><div class="lbl">Total gasto</div><div class="val">R$ ${totalGasto.toFixed(2)}</div></div>
     <div class="stat-card"><div class="lbl">Compras</div><div class="val">${STATE.historico.length}</div></div>
-    <div class="stat-card"><div class="lbl">Mercados</div><div class="val">${mercSet.size}</div></div>
     <div class="stat-card"><div class="lbl">Itens únicos</div><div class="val">${itemSet.size}</div></div>`;
   popularAnosAnalise();
 
@@ -662,12 +686,14 @@ function renderAnaliseMes() {
   const ano  = parseInt(document.getElementById('analise-ano').value);
   const el   = document.getElementById('analise-mes-chart');
 
-  if (!mes || !ano) { el.innerHTML = ''; return; }
+  if (!ano) { el.innerHTML = ''; return; }
 
-  // Filtra compras do mês/ano selecionado
+  // Filtra compras do ano (e mês se selecionado)
   const compras = STATE.historico.filter(e => {
     const d = new Date(e.data);
-    return d.getMonth() + 1 === mes && d.getFullYear() === ano;
+    const anoOk = d.getFullYear() === ano;
+    const mesOk = !mes || d.getMonth() + 1 === mes;
+    return anoOk && mesOk;
   });
 
   if (!compras.length) {
