@@ -40,11 +40,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .item-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0}
 .item-row:last-child{border-bottom:none}
 .cat-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0}
-.tag-frutas{background:#e8f5e0;color:#2d6a1a}
+.tag-frutasverd{background:#e8f5e0;color:#2d6a1a}
 .tag-laticinios{background:#fff3e0;color:#7a4500}
-.tag-graos{background:#fde8f0;color:#7a1a3a}
-.tag-carnes{background:#fdeae5;color:#7a2a10}
+.tag-graopadari{background:#fde8f0;color:#7a1a3a}
+.tag-carnespeix{background:#fdeae5;color:#7a2a10}
 .tag-bebidas{background:#ede8fe;color:#3d2a8a}
+.tag-temperosco{background:#fef9e0;color:#7a5c00}
+.tag-docessnack{background:#fce8f5;color:#6a1a5a}
 .tag-limpeza{background:#e3f0fd;color:#0a3d7a}
 .tag-higiene{background:#e0f5ee;color:#0a4a35}
 .tag-outros{background:#f0efea;color:#3a3a38}
@@ -100,9 +102,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="margin-bottom:10px">
       <select id="filtro-cat" onchange="renderLista()">
         <option value="">Todas as categorias</option>
-        <option>Frutas</option><option>Laticínios</option><option>Grãos</option>
-        <option>Carnes</option><option>Bebidas</option><option>Limpeza</option>
-        <option>Higiene</option><option>Outros</option>
+        <option>Frutas & Verduras</option><option>Laticínios</option><option>Grãos & Padaria</option>
+        <option>Carnes & Peixes</option><option>Bebidas</option><option>Temperos & Condimentos</option>
+        <option>Doces & Snacks</option><option>Limpeza</option><option>Higiene</option><option>Outros</option>
       </select>
     </div>
     <div id="lista-pendente"></div>
@@ -249,8 +251,8 @@ function save() {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
-const CATS = ['Frutas','Laticínios','Grãos','Carnes','Bebidas','Limpeza','Higiene','Outros'];
-function catKey(c){return(c||'outros').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');}
+const CATS = ['Frutas & Verduras','Laticínios','Grãos & Padaria','Carnes & Peixes','Bebidas','Temperos & Condimentos','Doces & Snacks','Limpeza','Higiene','Outros'];
+function catKey(c){return(c||'outros').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'').substring(0,10);}
 
 let editIdx = null;
 let catFiltroMontar = '';
