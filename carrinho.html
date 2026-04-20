@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Carrinho">
+<meta name="theme-color" content="#185FA5">
+<title>Carrinho</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;background:#fff}
+.topbar{padding:16px 16px 10px;background:#fff;border-bottom:1px solid #e8e8e8;flex-shrink:0}
+.topbar h1{font-size:20px;font-weight:700;color:#185FA5;letter-spacing:-0.3px}
+.topbar p{font-size:13px;color:#888;margin-top:2px}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ccc;margin-left:6px;vertical-align:middle;transition:background 0.3s}
+.sync-dot.online{background:#27a065}
+.sync-dot.syncing{background:#f0a500}
+.tabs{display:flex;border-bottom:1px solid #e8e8e8;background:#fff;flex-shrink:0}
+.tab{flex:1;padding:11px 4px;font-size:12px;font-weight:500;text-align:center;cursor:pointer;color:#888;border:none;background:none;border-bottom:2px solid transparent;transition:all 0.15s}
+.tab.active{color:#185FA5;border-bottom:2px solid #185FA5}
+.screen{display:none;flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.screen.active{display:block}
+button{cursor:pointer;font-family:inherit}
+.btn{padding:8px 14px;border-radius:10px;border:1px solid #d0d0d0;background:#fff;color:#1a1a1a;font-size:13px;transition:background 0.1s;font-family:inherit}
+.btn:active{background:#f0f0f0}
+.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-primary:active{background:#0C447C}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-danger{color:#c0392b;border-color:#e0b0b0}
+input,select{width:100%;padding:9px 12px;border-radius:10px;border:1px solid #d8d8d8;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,0.1)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field{margin-bottom:10px}
+.field label{font-size:12px;color:#666;display:block;margin-bottom:5px;font-weight:500}
+.card{background:#fff;border:1px solid #ececec;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.item-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.item-row:last-child{border-bottom:none}
+.cat-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.tag-frutas{background:#e8f5e0;color:#2d6a1a}
+.tag-laticinios{background:#fff3e0;color:#7a4500}
+.tag-graos{background:#fde8f0;color:#7a1a3a}
+.tag-carnes{background:#fdeae5;color:#7a2a10}
+.tag-bebidas{background:#ede8fe;color:#3d2a8a}
+.tag-limpeza{background:#e3f0fd;color:#0a3d7a}
+.tag-higiene{background:#e0f5ee;color:#0a4a35}
+.tag-outros{background:#f0efea;color:#3a3a38}
+.check-circle{width:24px;height:24px;border-radius:50%;border:2px solid #ccc;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.check-circle.done{background:#185FA5;border-color:#185FA5}
+.check-circle.done::after{content:'';width:6px;height:10px;border:2.5px solid #fff;border-top:none;border-left:none;transform:rotate(45deg);margin-top:-2px}
+.crossed{text-decoration:line-through;color:#bbb}
+.section-title{font-size:11px;font-weight:700;color:#aaa;margin:14px 0 6px;text-transform:uppercase;letter-spacing:0.06em}
+.empty{text-align:center;padding:40px 20px;color:#bbb;font-size:14px;line-height:1.7}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:16px;color:#1a1a1a}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.price-bar-wrap{background:#eef2f8;border-radius:6px;height:16px;overflow:hidden;margin-top:3px}
+.price-bar{height:100%;border-radius:6px;background:#185FA5;min-width:4px;transition:width 0.4s ease}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{background:#f4f8fd;border-radius:12px;padding:14px 12px}
+.stat-card .val{font-size:22px;font-weight:700;color:#185FA5}
+.stat-card .lbl{font-size:12px;color:#888;margin-bottom:4px;font-weight:500}
+.suggest-item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0;cursor:pointer}
+.suggest-item:last-child{border-bottom:none}
+.fab{position:fixed;bottom:24px;right:calc(50% - 220px);background:#185FA5;color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(24,95,165,0.4);z-index:50}
+.fab:active{transform:scale(0.93)}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pill{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid #d0d0d0;background:#fff;cursor:pointer;font-weight:500;transition:all 0.12s}
+.pill.active{background:#185FA5;color:#fff;border-color:#185FA5}
+#loading-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px}
+#loading-screen p{font-size:14px;color:#888}
+.spinner{width:32px;height:32px;border:3px solid #e0e8f4;border-top-color:#185FA5;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p>Conectando ao banco de dados...</p>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <h1>🛒 Carrinho <span class="sync-dot" id="sync-dot"></span></h1>
+    <p id="topbar-sub">Lista de compras</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('lista')">Lista</button>
+    <button class="tab" onclick="showTab('montar')">Montar</button>
+    <button class="tab" onclick="showTab('historico')">Histórico</button>
+    <button class="tab" onclick="showTab('analise')">Análise</button>
+  </div>
+
+  <div id="screen-lista" class="screen active">
+    <div style="margin-bottom:10px">
+      <select id="filtro-cat" onchange="renderLista()">
+        <option value="">Todas as categorias</option>
+        <option>Frutas</option><option>Laticínios</option><option>Grãos</option>
+        <option>Carnes</option><option>Bebidas</option><option>Limpeza</option>
+        <option>Higiene</option><option>Outros</option>
+      </select>
+    </div>
+    <div id="lista-pendente"></div>
+    <div id="lista-comprados"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;padding-bottom:20px">
+      <button class="btn" style="flex:1;font-weight:600" onclick="finalizarCompra()">✅ Finalizar compra</button>
+      <button class="btn btn-danger btn-sm" onclick="limparComprados()">Limpar marcados</button>
+    </div>
+  </div>
+
+  <div id="screen-montar" class="screen">
+    <p style="font-size:13px;color:#888;margin-bottom:10px">Toque para adicionar à lista atual</p>
+    <div class="field">
+      <input type="text" id="busca-suggest" placeholder="🔍  Buscar item..." oninput="renderSuggestions()">
+    </div>
+    <div class="pill-row" id="cat-pills"></div>
+    <div id="suggestions-list"></div>
+    <div style="height:20px"></div>
+  </div>
+
+  <div id="screen-historico" class="screen">
+    <div class="row2" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:0">
+        <select id="hist-mes" onchange="renderHistorico()">
+          <option value="">Todos os meses</option>
+          <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+          <option value="2">Março</option><option value="3">Abril</option>
+          <option value="4">Maio</option><option value="5">Junho</option>
+          <option value="6">Julho</option><option value="7">Agosto</option>
+          <option value="8">Setembro</option><option value="9">Outubro</option>
+          <option value="10">Novembro</option><option value="11">Dezembro</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <select id="hist-ano" onchange="renderHistorico()">
+          <option value="">Todos os anos</option>
+        </select>
+      </div>
+    </div>
+    <div id="historico-list"></div>
+  </div>
+
+  <div id="screen-analise" class="screen">
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <p class="section-title">Gastos por mês</p>
+    <div class="row2" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:0">
+        <select id="analise-mes" onchange="renderAnaliseMes()">
+          <option value="">Mês...</option>
+          <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+          <option value="3">Março</option><option value="4">Abril</option>
+          <option value="5">Maio</option><option value="6">Junho</option>
+          <option value="7">Julho</option><option value="8">Agosto</option>
+          <option value="9">Setembro</option><option value="10">Outubro</option>
+          <option value="11">Novembro</option><option value="12">Dezembro</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <select id="analise-ano" onchange="renderAnaliseMes()">
+          <option value="">Ano...</option>
+        </select>
+      </div>
+    </div>
+    <div id="analise-mes-chart"></div>
+
+    <p class="section-title" style="margin-top:16px">Comparativo de preços</p>
+    <div class="field">
+      <select id="analise-item" onchange="onAnaliseItemChange()">
+        <option value="">Selecione um produto...</option>
+      </select>
+    </div>
+    <div class="field" id="analise-marca-wrap" style="display:none">
+      <select id="analise-marca" onchange="renderAnalise()">
+        <option value="">Todas as marcas</option>
+      </select>
+    </div>
+    <div id="analise-chart"></div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<button class="fab" id="fab-add" onclick="openAddModal()" style="display:none">+</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ── Firebase ───────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyC-zynb5wnvM-s9bGX7MZFm6oncGyI-E_A",
+  authDomain: "carrinho-blue-b11c0.firebaseapp.com",
+  databaseURL: "https://carrinho-blue-b11c0-default-rtdb.firebaseio.com",
+  projectId: "carrinho-blue-b11c0",
+  storageBucket: "carrinho-blue-b11c0.firebasestorage.app",
+  messagingSenderId: "505459722974",
+  appId: "1:505459722974:web:24386dd9c76ded3aef104f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── Estado local (espelho em tempo real do Firebase) ───────────────
+let STATE = { lista: [], historico: [], mercados: ['Mercado A', 'Mercado B'] };
+let dbReady = false;
+
+db.ref('carrinho').on('value', snap => {
+  const val = snap.val() || {};
+  STATE.lista     = val.lista     ? Object.values(val.lista)     : [];
+  STATE.historico = val.historico ? Object.values(val.historico) : [];
+  STATE.mercados  = val.mercados  ? Object.values(val.mercados)  : ['Mercado A', 'Mercado B'];
+
+  if (!dbReady) {
+    dbReady = true;
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('fab-add').style.display = 'flex';
+    setSyncDot('online');
+  }
+  // Atualiza a aba visível automaticamente
+  const idx = [...document.querySelectorAll('.tab')].findIndex(b => b.classList.contains('active'));
+  refreshTab(['lista','montar','historico','analise'][idx] || 'lista');
+}, err => {
+  document.getElementById('loading-screen').querySelector('p').textContent =
+    'Erro ao conectar. Verifique a internet.';
+});
+
+db.ref('.info/connected').on('value', snap => {
+  if (dbReady) setSyncDot(snap.val() ? 'online' : '');
+});
+
+function setSyncDot(cls) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-dot' + (cls ? ' ' + cls : '');
+}
+
+function save() {
+  setSyncDot('syncing');
+  db.ref('carrinho').set({
+    lista:     STATE.lista,
+    historico: STATE.historico,
+    mercados:  STATE.mercados
+  }).then(() => setSyncDot('online'))
+    .catch(() => setSyncDot(''));
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
+const CATS = ['Frutas','Laticínios','Grãos','Carnes','Bebidas','Limpeza','Higiene','Outros'];
+function catKey(c){return(c||'outros').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');}
+
+let editIdx = null;
+let catFiltroMontar = '';
+
+// ── Navegação ──────────────────────────────────────────────────────
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((b,i) => {
+    b.classList.toggle('active', ['lista','montar','historico','analise'][i] === t);
+  });
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + t).classList.add('active');
+  document.getElementById('fab-add').style.display = t === 'lista' ? 'flex' : 'none';
+  refreshTab(t);
+}
+function refreshTab(t) {
+  if (t === 'lista')     renderLista();
+  if (t === 'montar')    { renderCatPills(); renderSuggestions(); }
+  if (t === 'historico') renderHistorico();
+  if (t === 'analise')   renderAnalise();
+}
+
+// ── Aba Lista ──────────────────────────────────────────────────────
+function renderLista() {
+  const lista  = STATE.lista;
+  const filtro = document.getElementById('filtro-cat').value;
+  const pendentes = lista.filter(i => !i.comprado && (!filtro || i.categoria === filtro));
+  const comprados = lista.filter(i =>  i.comprado && (!filtro || i.categoria === filtro));
+  document.getElementById('topbar-sub').textContent = lista.length
+    ? `${lista.filter(i => i.comprado).length} de ${lista.length} itens` : 'Lista vazia';
+
+  let hp = '';
+  if (!pendentes.length && !comprados.length)
+    hp = '<div class="empty">Lista vazia.<br>Use o botão + ou a aba Montar.</div>';
+  pendentes.forEach(item => {
+    const ri = STATE.lista.indexOf(item);
+    hp += `<div class="item-row">
+      <div class="check-circle" onclick="toggleItem(${ri})"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
+        <div style="font-size:12px;color:#888">${item.marca||''}</div>
+      </div>
+      <span class="cat-badge tag-${catKey(item.categoria)}">${item.categoria}</span>
+      <button class="btn btn-sm" onclick="openEditModal(${ri})" style="margin-left:4px;padding:4px 9px;font-size:11px">✎</button>
+    </div>`;
+  });
+  document.getElementById('lista-pendente').innerHTML = hp;
+
+  let hc = '';
+  if (comprados.length) {
+    hc = '<p class="section-title">Comprados</p>';
+    comprados.forEach(item => {
+      const ri = STATE.lista.indexOf(item);
+      hc += `<div class="item-row">
+        <div class="check-circle done" onclick="toggleItem(${ri})"></div>
+        <div style="flex:1;min-width:0">
+          <div class="crossed" style="font-size:15px">${item.nome}</div>
+          ${item.preco ? `<div style="font-size:12px;color:#888">${item.quantidade||''} ${item.unidade||''} · R$ ${Number(item.preco).toFixed(2)} em ${item.mercado||'?'}${item.precoPorKg?' · R$ '+Number(item.precoPorKg).toFixed(2)+'/kg':''}</div>` : ''}
+        </div>
+        <span class="cat-badge tag-${catKey(item.categoria)}">${item.categoria}</span>
+      </div>`;
+    });
+  }
+  document.getElementById('lista-comprados').innerHTML = hc;
+}
+
+function toggleItem(i) {
+  STATE.lista[i].comprado = !STATE.lista[i].comprado;
+  if (STATE.lista[i].comprado) { save(); openPrecoModal(i); return; }
+  save();
+}
+
+function limparComprados() {
+  STATE.lista = STATE.lista.filter(i => !i.comprado);
+  save();
+}
+
+function finalizarCompra() {
+  const comprados = STATE.lista.filter(i => i.comprado);
+  if (!comprados.length) { alert('Nenhum item marcado como comprado.'); return; }
+  STATE.historico.unshift({ data: new Date().toISOString(), itens: comprados });
+  STATE.lista = STATE.lista.filter(i => !i.comprado);
+  save();
+  showTab('historico');
+}
+
+// ── Modal de item ──────────────────────────────────────────────────
+function openAddModal()   { editIdx = null; showModal(`<h2>Novo item</h2>${formHTML({})}`); }
+function openEditModal(i) { editIdx = i;    showModal(`<h2>Editar item</h2>${formHTML(STATE.lista[i])}`); }
+
+function formHTML(item) {
+  const catOpts = CATS.map(c => `<option${item.categoria===c?' selected':''}>${c}</option>`).join('');
+  // Coleta nomes e marcas únicos do histórico + lista atual para o datalist
+  const todosItens = [];
+  STATE.historico.forEach(e => e.itens.forEach(it => todosItens.push(it)));
+  STATE.lista.forEach(it => todosItens.push(it));
+  const nomesUnicos  = [...new Set(todosItens.map(i => i.nome).filter(Boolean))].sort();
+  const marcasUnicas = [...new Set(todosItens.map(i => i.marca).filter(Boolean))].sort();
+  const dlNomes  = nomesUnicos.map(n  => `<option value="${n}">`).join('');
+  const dlMarcas = marcasUnicas.map(m => `<option value="${m}">`).join('');
+
+  return `
+    <datalist id="dl-nomes">${dlNomes}</datalist>
+    <datalist id="dl-marcas">${dlMarcas}</datalist>
+    <div class="field"><label>Nome do item</label>
+      <input id="f-nome" type="text" list="dl-nomes" value="${item.nome||''}" placeholder="Ex: Arroz" autocomplete="off">
+    </div>
+    <div class="field"><label>Marca / Tipo</label>
+      <input id="f-marca" type="text" list="dl-marcas" value="${item.marca||''}" placeholder="Ex: Camil, integral, light..." autocomplete="off">
+    </div>
+    <div class="field"><label>Categoria</label><select id="f-cat">${catOpts}</select></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn" style="flex:1" onclick="closeModal()">Cancelar</button>
+      ${editIdx !== null ? `<button class="btn btn-danger btn-sm" onclick="removerItem(${editIdx})">Remover</button>` : ''}
+      <button class="btn btn-primary" style="flex:1;font-weight:600" onclick="salvarItem()">Salvar</button>
+    </div>`;
+}
+
+function salvarItem() {
+  const nome = document.getElementById('f-nome').value.trim();
+  if (!nome) return;
+  const obj = {
+    nome,
+    marca:     document.getElementById('f-marca').value.trim(),
+    categoria: document.getElementById('f-cat').value,
+    comprado:  false
+  };
+  if (editIdx !== null) Object.assign(STATE.lista[editIdx], obj);
+  else STATE.lista.push(obj);
+  save();
+  closeModal();
+}
+
+function removerItem(i) {
+  STATE.lista.splice(i, 1);
+  save();
+  closeModal();
+}
+
+// ── Modal de preço ─────────────────────────────────────────────────
+function openPrecoModal(i) {
+  const item = STATE.lista[i];
+  const opts = STATE.mercados.map(m => `<option${item.mercado===m?' selected':''}>${m}</option>`).join('')
+             + '<option value="__novo">+ Novo mercado</option>';
+  showModal(`<h2>Registrar compra</h2>
+    <p style="font-size:13px;color:#888;margin-bottom:14px">${item.nome}</p>
+    <div class="field"><label>Mercado</label>
+      <select id="m-mercado" onchange="toggleNovoMercado()">${opts}</select>
+    </div>
+    <div id="novo-mercado-wrap" style="display:none" class="field">
+      <label>Nome do novo mercado</label>
+      <input id="m-novo-mercado" type="text" placeholder="Ex: Supermercado Central">
+    </div>
+    <div class="row2">
+      <div class="field"><label>Preço total (R$)</label><input id="m-preco" type="number" step="0.01" placeholder="0,00" value="${item.preco||''}"></div>
+      <div class="field"><label>Preço/kg (opcional)</label><input id="m-precoPorKg" type="number" step="0.01" placeholder="0,00" value="${item.precoPorKg||''}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Quantidade</label><input id="m-qtd" type="text" value="${item.quantidade||''}"></div>
+      <div class="field"><label>Unidade</label><select id="m-un"><option${item.unidade==='kg'?' selected':''}>kg</option><option${item.unidade==='L'?' selected':''}>L</option><option${(!item.unidade||item.unidade==='un.')?' selected':''}>un.</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn" style="flex:1" onclick="cancelarCompra(${i})">Cancelar</button>
+      <button class="btn btn-primary" style="flex:1;font-weight:600" onclick="salvarPreco(${i})">Salvar</button>
+    </div>`);
+}
+
+function toggleNovoMercado() {
+  document.getElementById('novo-mercado-wrap').style.display =
+    document.getElementById('m-mercado').value === '__novo' ? 'block' : 'none';
+}
+
+function cancelarCompra(i) {
+  STATE.lista[i].comprado = false;
+  save();
+  closeModal();
+}
+
+function salvarPreco(i) {
+  let mercado = document.getElementById('m-mercado').value;
+  if (mercado === '__novo') {
+    mercado = document.getElementById('m-novo-mercado').value.trim() || 'Novo mercado';
+    if (!STATE.mercados.includes(mercado)) STATE.mercados.push(mercado);
+  }
+  STATE.lista[i].mercado    = mercado;
+  STATE.lista[i].preco      = document.getElementById('m-preco').value;
+  STATE.lista[i].precoPorKg = document.getElementById('m-precoPorKg').value;
+  STATE.lista[i].quantidade = document.getElementById('m-qtd').value;
+  STATE.lista[i].unidade    = document.getElementById('m-un').value;
+  save();
+  closeModal();
+}
+
+// ── Aba Montar ─────────────────────────────────────────────────────
+function renderCatPills() {
+  let h = `<span class="pill${catFiltroMontar===''?' active':''}" onclick="setCatFiltro('')">Todos</span>`;
+  CATS.forEach(c => { h += `<span class="pill${catFiltroMontar===c?' active':''}" onclick="setCatFiltro('${c}')">${c}</span>`; });
+  document.getElementById('cat-pills').innerHTML = h;
+}
+function setCatFiltro(c) { catFiltroMontar = c; renderCatPills(); renderSuggestions(); }
+
+function renderSuggestions() {
+  const busca = (document.getElementById('busca-suggest') || {}).value || '';
+  const mapa = {};
+  STATE.historico.forEach(e => e.itens.forEach(it => {
+    const k = it.nome.toLowerCase();
+    if (!mapa[k]) mapa[k] = { nome:it.nome, categoria:it.categoria, quantidade:it.quantidade, unidade:it.unidade, count:0, lastPreco:it.preco };
+    mapa[k].count++;
+  }));
+  let items = Object.values(mapa).sort((a,b) => b.count - a.count);
+  if (busca) items = items.filter(i => i.nome.toLowerCase().includes(busca.toLowerCase()));
+  if (catFiltroMontar) items = items.filter(i => i.categoria === catFiltroMontar);
+  const naLista = STATE.lista.map(i => i.nome.toLowerCase());
+  let h = '';
+  if (!items.length) h = '<div class="empty">Nenhum histórico ainda.<br>Finalize uma compra para ver sugestões.</div>';
+  items.forEach(it => {
+    const ja = naLista.includes(it.nome.toLowerCase());
+    h += `<div class="suggest-item" onclick="${ja?'':(`addFromSuggest('${it.nome.replace(/'/g,"\\'")}','${it.categoria}','${it.quantidade||1}','${it.unidade||''}')`)}" style="${ja?'opacity:.4;cursor:default':''}">
+      <span class="cat-badge tag-${catKey(it.categoria)}">${it.categoria}</span>
+      <span style="flex:1;font-size:14px;font-weight:500">${it.nome}</span>
+      <span style="font-size:12px;color:#aaa">${it.count}x${it.lastPreco?' · R$ '+Number(it.lastPreco).toFixed(2):''}${ja?' ✓':''}</span>
+    </div>`;
+  });
+  document.getElementById('suggestions-list').innerHTML = h;
+}
+
+function addFromSuggest(nome, cat, qtd, un) {
+  STATE.lista.push({ nome, categoria:cat, quantidade:qtd, unidade:un, comprado:false });
+  save();
+}
+
+// ── Aba Histórico ──────────────────────────────────────────────────
+function renderHistorico() {
+  // Popula anos disponíveis no histórico
+  const anosSet = new Set(STATE.historico.map(e => new Date(e.data).getFullYear()));
+  const selAno  = document.getElementById('hist-ano');
+  const curAno  = selAno.value;
+  selAno.innerHTML = '<option value="">Todos os anos</option>';
+  [...anosSet].sort((a,b) => b-a).forEach(a => {
+    const o = document.createElement('option');
+    o.value = a; o.textContent = a; if (String(a) === curAno) o.selected = true;
+    selAno.appendChild(o);
+  });
+
+  const mesSel = document.getElementById('hist-mes').value;
+  const anoSel = selAno.value;
+
+  // Filtra compras pelo mês/ano selecionados
+  const filtrado = STATE.historico.filter((e, ei) => {
+    const d = new Date(e.data);
+    if (anoSel && String(d.getFullYear()) !== anoSel) return false;
+    if (mesSel !== '' && String(d.getMonth()) !== mesSel) return false;
+    return true;
+  });
+
+  if (!filtrado.length) {
+    document.getElementById('historico-list').innerHTML = '<div class="empty">Nenhuma compra encontrada para este período.</div>';
+    return;
+  }
+
+  let h = '';
+  filtrado.forEach(e => {
+    // Índice real no STATE para remoção
+    const ei = STATE.historico.indexOf(e);
+    const d  = new Date(e.data);
+    const ds = d.toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    const total = e.itens.reduce((s,i) => s + (parseFloat(i.preco)||0), 0);
+    h += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:700;text-transform:capitalize">${ds}</div>
+          <div style="font-size:12px;color:#888">${e.itens.length} itens${total?' · R$ '+total.toFixed(2):''}</div>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="removerCompra(${ei})">✕</button>
+      </div>`;
+    e.itens.forEach(it => {
+      h += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5">
+        <span class="cat-badge tag-${catKey(it.categoria)}">${it.categoria}</span>
+        <span style="flex:1;font-size:13px">${it.nome}${it.marca?` <span style="color:#aaa">· ${it.marca}</span>`:''}</span>
+        <span style="font-size:12px;color:#888;text-align:right">${it.preco?'R$ '+Number(it.preco).toFixed(2):''}${it.mercado?'<br>'+it.mercado:''}</span>
+      </div>`;
+    });
+    h += '</div>';
+  });
+  document.getElementById('historico-list').innerHTML = h;
+}
+
+function removerCompra(i) {
+  if (!confirm('Remover esta compra do histórico?')) return;
+  STATE.historico.splice(i, 1);
+  save();
+}
+
+// ── Aba Análise ────────────────────────────────────────────────────
+function precoUnitario(r) {
+  // Calcula preço por unidade de medida a partir do preço total e quantidade
+  const preco = parseFloat(r.preco) || 0;
+  const qtd   = parseFloat(r.quantidade) || 1;
+  return preco / qtd;
+}
+
+function renderAnalise() {
+  const todos = [];
+  STATE.historico.forEach(e => e.itens.forEach(it => { if (it.preco) todos.push({...it, data:e.data}); }));
+  const totalGasto = todos.reduce((s,i) => s+(parseFloat(i.preco)||0), 0);
+  const mercSet = new Set(todos.map(i => i.mercado).filter(Boolean));
+  const itemSet = new Set(todos.map(i => i.nome));
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="lbl">Total gasto</div><div class="val">R$ ${totalGasto.toFixed(2)}</div></div>
+    <div class="stat-card"><div class="lbl">Compras</div><div class="val">${STATE.historico.length}</div></div>
+    <div class="stat-card"><div class="lbl">Mercados</div><div class="val">${mercSet.size}</div></div>
+    <div class="stat-card"><div class="lbl">Itens únicos</div><div class="val">${itemSet.size}</div></div>`;
+  popularAnosAnalise();
+
+  // Popula select de produtos
+  const selItem = document.getElementById('analise-item');
+  const curItem = selItem.value;
+  selItem.innerHTML = '<option value="">Selecione um produto...</option>';
+  [...itemSet].sort().forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n; if (n === curItem) o.selected = true;
+    selItem.appendChild(o);
+  });
+
+  const item = selItem.value;
+  if (!item) {
+    document.getElementById('analise-marca-wrap').style.display = 'none';
+    document.getElementById('analise-chart').innerHTML = '';
+    return;
+  }
+
+  // Popula select de marcas com base no produto selecionado
+  const marcasDoItem = new Set(
+    todos.filter(i => i.nome === item && i.marca).map(i => i.marca)
+  );
+  const selMarca = document.getElementById('analise-marca');
+  const curMarca = selMarca.value;
+  selMarca.innerHTML = '<option value="">Todas as marcas</option>';
+  [...marcasDoItem].sort().forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m; if (m === curMarca) o.selected = true;
+    selMarca.appendChild(o);
+  });
+  document.getElementById('analise-marca-wrap').style.display = marcasDoItem.size > 0 ? 'block' : 'none';
+
+  const marcaSel = selMarca.value;
+  const registros = todos.filter(i =>
+    i.nome === item &&
+    i.mercado &&
+    (!marcaSel || (i.marca || '') === marcaSel)
+  );
+
+  if (!registros.length) {
+    document.getElementById('analise-chart').innerHTML = '<div class="empty">Nenhum preço registrado para este filtro.</div>';
+    return;
+  }
+
+  // Agrupa por chave: sem marca selecionada → "Marca · Mercado", com marca → só "Mercado"
+  const grupos = {};
+  registros.forEach(r => {
+    const rotulo = marcaSel
+      ? (r.mercado || '?')
+      : `${r.marca || 'Sem marca'} · ${r.mercado || '?'}`;
+    if (!grupos[rotulo]) grupos[rotulo] = { precoUnit: [], unidade: r.unidade || '' };
+    grupos[rotulo].precoUnit.push(precoUnitario(r));
+    if (r.unidade) grupos[rotulo].unidade = r.unidade;
+  });
+
+  const entries = Object.entries(grupos)
+    .map(([rotulo, v]) => ({
+      rotulo,
+      unidade: v.unidade,
+      med: v.precoUnit.reduce((a,b) => a+b, 0) / v.precoUnit.length,
+      min: Math.min(...v.precoUnit),
+      max: Math.max(...v.precoUnit),
+      n:   v.precoUnit.length
+    }))
+    .sort((a, b) => a.med - b.med);
+
+  const maxP   = Math.max(...entries.map(e => e.med));
+  const melhor = entries[0].rotulo;
+  const unLbl  = entries[0].unidade ? `/${entries[0].unidade}` : '';
+
+  let h = marcaSel
+    ? `<p style="font-size:12px;color:#888;margin-bottom:10px">Marca: <strong>${marcaSel}</strong></p>`
+    : '';
+
+  entries.forEach(e => {
+    const pct    = Math.round((e.med / maxP) * 100);
+    const isBest = e.rotulo === melhor;
+    h += `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:14px;font-weight:600">${e.rotulo}${isBest ? ' <span style="font-size:11px;background:#e8f5e0;color:#2d6a1a;padding:2px 7px;border-radius:10px;font-weight:600">mais barato</span>' : ''}</span>
+        <span style="font-size:14px;font-weight:700;color:#185FA5">R$ ${e.med.toFixed(2)}${unLbl}</span>
+      </div>
+      <div class="price-bar-wrap"><div class="price-bar" style="width:${pct}%;background:${isBest ? '#27a065' : '#185FA5'}"></div></div>
+      <div style="display:flex;gap:12px;margin-top:4px;font-size:12px;color:#aaa">
+        <span>${e.n} compra${e.n > 1 ? 's' : ''}</span>
+        ${e.min !== e.max ? `<span>min R$ ${e.min.toFixed(2)} · max R$ ${e.max.toFixed(2)}${unLbl}</span>` : ''}
+        ${e.n > 1 ? `<span style="color:#f0a500;font-style:italic">preço médio estimado</span>` : ''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('analise-chart').innerHTML = h;
+}
+function renderAnaliseMes() {
+  const mes  = parseInt(document.getElementById('analise-mes').value);
+  const ano  = parseInt(document.getElementById('analise-ano').value);
+  const el   = document.getElementById('analise-mes-chart');
+
+  if (!mes || !ano) { el.innerHTML = ''; return; }
+
+  // Filtra compras do mês/ano selecionado
+  const compras = STATE.historico.filter(e => {
+    const d = new Date(e.data);
+    return d.getMonth() + 1 === mes && d.getFullYear() === ano;
+  });
+
+  if (!compras.length) {
+    el.innerHTML = '<div class="empty">Nenhuma compra neste período.</div>';
+    return;
+  }
+
+  // Agrupa itens e calcula totais
+  const totalGeral = compras.reduce((s, e) => s + e.itens.reduce((ss, i) => ss + (parseFloat(i.preco)||0), 0), 0);
+  const porCat = {};
+  compras.forEach(e => e.itens.forEach(it => {
+    const cat = it.categoria || 'Outros';
+    if (!porCat[cat]) porCat[cat] = 0;
+    porCat[cat] += parseFloat(it.preco) || 0;
+  }));
+  const catEntries = Object.entries(porCat).sort((a,b) => b[1]-a[1]);
+  const maxCat = Math.max(...catEntries.map(e => e[1]));
+
+  let h = `<div class="card" style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:14px;font-weight:700">Total do mês</span>
+      <span style="font-size:20px;font-weight:700;color:#185FA5">R$ ${totalGeral.toFixed(2)}</span>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Por categoria</div>`;
+
+  catEntries.forEach(([cat, val]) => {
+    const pct = Math.round((val / maxCat) * 100);
+    h += `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+        <span>${cat}</span><span style="font-weight:600">R$ ${val.toFixed(2)}</span>
+      </div>
+      <div class="price-bar-wrap"><div class="price-bar" style="width:${pct}%;background:#185FA5"></div></div>
+    </div>`;
+  });
+  h += '</div>';
+
+  // Lista detalhada das compras do mês
+  compras.forEach((e, ei) => {
+    const d  = new Date(e.data);
+    const ds = d.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'short'});
+    const tot = e.itens.reduce((s,i) => s+(parseFloat(i.preco)||0), 0);
+    h += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:700;text-transform:capitalize">${ds}</span>
+        <span style="font-size:13px;font-weight:700;color:#185FA5">${tot ? 'R$ '+tot.toFixed(2) : ''}</span>
+      </div>`;
+    e.itens.forEach(it => {
+      h += `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f5f5f5">
+        <span class="cat-badge tag-${catKey(it.categoria)}">${it.categoria}</span>
+        <span style="flex:1;font-size:13px">${it.nome}${it.marca?' <span style="color:#aaa">· '+it.marca+'</span>':''}</span>
+        <span style="font-size:12px;color:#888;text-align:right">${it.preco?'R$ '+Number(it.preco).toFixed(2):''}${it.mercado?'<br><span style="font-size:11px">'+it.mercado+'</span>':''}</span>
+      </div>`;
+    });
+    h += '</div>';
+  });
+
+  el.innerHTML = h;
+}
+
+function popularAnosAnalise() {
+  const anos = new Set(STATE.historico.map(e => new Date(e.data).getFullYear()));
+  const sel  = document.getElementById('analise-ano');
+  const cur  = sel.value;
+  sel.innerHTML = '<option value="">Ano...</option>';
+  [...anos].sort((a,b) => b-a).forEach(a => {
+    const o = document.createElement('option');
+    o.value = a; o.textContent = a; if (String(a) === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function onAnaliseItemChange() {
+  // Reseta a marca ao trocar de produto e re-renderiza
+  document.getElementById('analise-marca').value = '';
+  renderAnalise();
+}
+
+// ── Modais ─────────────────────────────────────────────────────────
+function showModal(content) {
+  closeModal();
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay'; ov.id = 'modal-overlay';
+  ov.innerHTML = `<div class="modal">${content}</div>`;
+  // Fechar apenas pelos botões — clicar fora não fecha o modal
+  document.body.appendChild(ov);
+}
+function closeModal() { const ov = document.getElementById('modal-overlay'); if (ov) ov.remove(); }
+</script>
+</body>
+</html>
